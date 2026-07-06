@@ -1,21 +1,26 @@
-- name: copy mongo repo
+- name: copy rabbitmq repo
   ansible.builtin.copy:
-    src: mongo.repo
-    dest: /etc/yum.repos.d/mongo.repo
+    src: rabbitmq.repo
+    dest: /etc/yum.repos.d/rabbitmq.repo
 
-- name: install mongodb server
+- name: install rabbitmq server
   ansible.builtin.dnf:
-    name: mongodb-org
+    name: rabbitmq-server
     state: present
 
-- name: allow remote connections
-  ansible.builtin.replace:
-    path: /etc/mongod.conf
-    regexp: '127.0.0.1'
-    replace: '0.0.0.0'
-
-- name: start and enable mongodb
+- name: start and enable rabbitmq
   ansible.builtin.service:
-    name: mongod
+    state: restarted
     enabled: yes
-    state: started
+    name: rabbitmq-server
+
+- name: create rabbitmq user
+  community.rabbitmq.rabbitmq_user:
+    user: roboshop 
+    password: roboshop123
+    permissions:
+      - vhost: /
+        configure_priv: .*
+        read_priv: .*
+        write_priv: .*
+    state: present
