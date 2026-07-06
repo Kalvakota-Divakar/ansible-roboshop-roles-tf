@@ -3,18 +3,39 @@
     name: common
     tasks_from: app-setup.yaml
 
-- name: python setup
+- name: java setup
   ansible.builtin.import_role:
     name: common
-    tasks_from: python-setup.yaml
+    tasks_from: java-setup.yaml
 
 - name: systemd setup
   ansible.builtin.import_role:
     name: common
     tasks_from: systemd-setup.yaml
 
-- name: restart payment
+- name: install python dependencie
+  ansible.builtin.pip:
+    name: "{{ item }}"
+    executable: pip3.9
+  loop:
+  - cryptography
+  - PyMySQL
+
+- name: import shipping data
+  community.mysql.mysql_db:
+    state: import
+    name: all
+    login_host: "{{ MYSQL_HOST }}"
+    login_user: root
+    login_password: RoboShop@1
+    target: "{{ item }}"
+  loop:
+  - /app/db/schema.sql
+  - /app/db/app-user.sql 
+  - /app/db/master-data.sql
+
+- name: start and enable shipping
   ansible.builtin.service:
-    name: payment
+    name: shipping
     state: restarted
     enabled: yes
